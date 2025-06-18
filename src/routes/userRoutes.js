@@ -1,56 +1,50 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
 const { protect, adminOnly } = require('../middleware/auth');
+const userController = require('../controllers/userController');
+const User = require('../models/User');
 
+// Admin-only: Get all users
+router.get('/', protect, adminOnly, userController.getAllUsers);
 
-router.get('/', protect, adminOnly, async (req, res) => {
-  const users = await User.find().select('-password -description');
-  res.json(users);
+// Admin-only: Get user by ID
+router.get('/:id', protect, adminOnly, userController.getUserById);
+
+// Update user (self or admin)
+router.put('/:id', protect, async(req, res) => {
+    const { name, description, status } = req.body;
+
+    if (req.user._id.toString() !== req.params.id && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (name) user.name = name;
+    if (description && req.user.role === 'user') {
+        user.description = description;
+        user.hasDescription = true;
+    }
+    if (status && req.user.role === 'admin') {
+        user.status = status;
+    }
+
+    await user.save();
+    res.json({ message: 'User updated', user });
 });
 
-router.get('/:id', protect, adminOnly, async (req, res) => {
-  const user = await User.findById(req.params.id).select('-password');
-  if (!user) return res.status(404).json({ message: 'User not found' });
+// Delete user (self or admin)
+router.delete('/:id', protect, async(req, res) => {
+    if (req.user._id.toString() !== req.params.id && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Not authorized' });
+    }
 
-  res.json(user);
-});
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-router.put('/:id', protect, async (req, res) => {
-  const { name, description, status } = req.body;
-
-  
-  if (req.user._id.toString() !== req.params.id && req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Not authorized' });
-  }
-
-  const user = await User.findById(req.params.id);
-  if (!user) return res.status(404).json({ message: 'User not found' });
-
-  if (name) user.name = name;
-  if (description && req.user.role === 'user') {
-    user.description = description;
-    user.hasDescription = true;
-  }
-  if (status && req.user.role === 'admin') {
-    user.status = status;
-  }
-
-  await user.save();
-  res.json({ message: 'User updated', user });
-});
-
-
-router.delete('/:id', protect, async (req, res) => {
-  if (req.user._id.toString() !== req.params.id && req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Not authorized' });
-  }
-
-  const user = await User.findById(req.params.id);
-  if (!user) return res.status(404).json({ message: 'User not found' });
-
-  await user.deleteOne();
-  res.json({ message: 'User deleted' });
+    await user.deleteOne();
+    res.json({ message: 'User deleted' });
 });
 
 module.exports = router;
