@@ -7,13 +7,13 @@ const {
   addWorker
 } = require('../controllers/managerController');
 const { protect, authorizeRoles } = require('../middleware/auth');
+const trackActivity = require('../middleware/trackActivity'); 
 
-// Only accessible by logged-in managers
-router.use(protect, authorizeRoles('manager'));
+router.use(protect, authorizeRoles('manager'), trackActivity); 
 
-router.get('/workers', getWorkersUnderManager);       // Get workers under this manager
-router.delete('/workers/:id', deleteWorker);          // Delete a worker (must be under this manager)
-router.get('/active', getActiveUsers);                // Get active workers and managers
-router.post('/add-worker', addWorker);                // Add a new worker under this manager
+router.get('/workers', getWorkersUnderManager);
+router.delete('/workers/:id', deleteWorker);
+router.get('/active', getActiveUsers);
+router.post('/add-worker', addWorker);
 
 module.exports = router;

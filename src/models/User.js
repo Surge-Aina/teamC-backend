@@ -34,6 +34,14 @@ const UserSchema = new mongoose.Schema({
     enum: ['active', 'inactive'],
     default: 'active'       // used for future status handling
   },
+  isActive: {
+    type: Boolean,
+    default: true           // marks if user is currently active
+  },
+  lastActive: {
+    type: Date,
+    default: Date.now       // auto-tracks last request time
+  },
   createdAt: {
     type: Date,
     default: Date.now       // automatic timestamp

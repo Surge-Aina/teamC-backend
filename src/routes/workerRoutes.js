@@ -5,11 +5,11 @@ const {
   deleteOwnProfile
 } = require('../controllers/workerController');
 const { protect, authorizeRoles } = require('../middleware/auth');
+const trackActivity = require('../middleware/trackActivity'); 
 
-// Only accessible by logged-in workers
-router.use(protect, authorizeRoles('worker'));
+router.use(protect, authorizeRoles('worker'), trackActivity); 
 
-router.get('/manager', getMyManager);           // Get this worker's manager
-router.delete('/delete', deleteOwnProfile);     // Delete own profile
+router.get('/manager', getMyManager);
+router.delete('/delete', deleteOwnProfile);
 
 module.exports = router;
