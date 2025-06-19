@@ -3,6 +3,13 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
 
+/**
+ * Generates a JWT token for the given user
+ * @param {Object} user - The user object containing user data
+ * @param {string} user._id - The user's unique identifier
+ * @param {string} user.role - The user's role
+ * @returns {string} JWT token signed with the application's secret
+ */
 const generateToken = (user) => {
     return jwt.sign({ id: user._id, role: user.role },
         process.env.JWT_SECRET, { expiresIn: '1d' }
@@ -10,6 +17,22 @@ const generateToken = (user) => {
 };
 
 
+/**
+ * Handles user registration
+ * @async
+ * @function signup
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body containing user registration data
+ * @param {string} req.body.name - User's full name
+ * @param {string} req.body.email - User's email address
+ * @param {string} req.body.password - User's password (will be hashed)
+ * @param {string} [req.body.description] - Optional user description
+ * @param {string} [req.body.phone] - Optional user phone number
+ * @param {string} [req.body.role='user'] - Optional user role (defaults to 'user')
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} Response with user data and JWT token
+ * @throws {Error} If user already exists or server error occurs
+ */
 exports.signup = async(req, res) => {
 
     const { name, email, password, description, phone, role } = req.body;
@@ -41,6 +64,18 @@ exports.signup = async(req, res) => {
 };
 
 
+/**
+ * Handles user authentication
+ * @async
+ * @function login
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body containing login credentials
+ * @param {string} req.body.email - User's email address
+ * @param {string} req.body.password - User's password
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} Response with user data and JWT token
+ * @throws {Error} If user not found, invalid credentials, or server error occurs
+ */
 exports.login = async(req, res) => {
     const { email, password } = req.body;
 
