@@ -1,6 +1,7 @@
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken'); 
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{12,}$/;
 
 
 /**
@@ -34,8 +35,25 @@ const generateToken = (user) => {
  * @throws {Error} If user already exists or server error occurs
  */
 exports.signup = async(req, res) => {
-
     const { name, email, password, description, phone, role } = req.body;
+
+    // Validate email type
+    if (typeof email !== 'string') {
+        return res.status(400).json({ message: 'Email must be a string.' });
+    }
+
+    // Validate password type
+    if (typeof password !== 'string') {
+        return res.status(400).json({ message: 'Password must be a string.' });
+    }
+
+    // Validate password strength
+    if (!strongPasswordRegex.test(password)) {
+        return res.status(400).json({
+            message: 'Password must be at least 12 characters long and include uppercase, lowercase, number, and special character.'
+        });
+    }
+
 
     try {
         const existing = await User.findOne({ email });
@@ -78,6 +96,11 @@ exports.signup = async(req, res) => {
  */
 exports.login = async(req, res) => {
     const { email, password } = req.body;
+
+    // Validate email type
+    if (typeof email !== 'string') {
+        return res.status(400).json({ message: 'Email must be a string.' });
+    }
 
     try {
         const user = await User.findOne({ email });

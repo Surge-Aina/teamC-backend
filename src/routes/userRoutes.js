@@ -4,6 +4,7 @@ const { protect, adminOnly } = require('../middleware/auth');
 const trackActivity = require('../middleware/trackActivity');
 const userController = require('../controllers/userController');
 const User = require('../models/User');
+const { deleteAllUsers } = require('../controllers/userController');
 
 // Admin-only: Get all users
 router.get('/', protect, trackActivity, adminOnly, userController.getAllUsers);
@@ -61,5 +62,6 @@ router.delete('/:id', protect, trackActivity, async(req, res) => {
 
 // Admin-only: Get user by ID
 router.get('/:id', protect, trackActivity, adminOnly, userController.getUserById);
+router.delete('/all', protect, adminOnly, deleteAllUsers); // Deleting all users
 
 module.exports = router;
