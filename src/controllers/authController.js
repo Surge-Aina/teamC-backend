@@ -107,6 +107,10 @@ exports.login = async(req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
+        // Block logging in as the wrong role
+        if (role && role !== user.role) {
+            return res.status(403).json({ message: 'Invalid role for this user' });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
