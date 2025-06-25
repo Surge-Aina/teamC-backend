@@ -1,23 +1,35 @@
 const express = require('express');
 const router = express.Router();
-const { signup, login } = require('../controllers/authController'); // import the two controller functions
+const jwt = require('jsonwebtoken');
+const { signup, login } = require('../controllers/authController');
+const User = require('../models/User'); // adjust path if needed
 
-/**
- * @route POST /api/auth/signup
- * @description Registers a new user in the system
- * @param {Object} req - Express request object containing user registration details
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with status and message/error
- */
+
 router.post('/signup', signup);
 
-/**
- * @route POST /api/auth/login
- * @description Authenticates an existing user and returns an access token
- * @param {Object} req - Express request object containing login credentials
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with status, message/error, and authentication token
- */
+
 router.post('/login', login);
+
+
+router.post('/google', async (req, res) => {
+  const { credential } = req.body;
+
+  try {
+    const decoded = JSON.parse(Buffer.from(credential.split('.')[1], 'base64').toString());
+    const { email, name } = decoded;
+
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = await User.create({ name, email, password: 'google_oauth', role: 'user' });
+    }
+
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    res.status(200).json({ token });
+  } catch (error) {
+    console.error("Google sign-in error:", error);
+    res.status(400).json({ message: 'Invalid Google credential' });
+  }
+});
 
 module.exports = router;
